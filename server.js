@@ -233,6 +233,8 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+
+
 // ======================
 // MAILER
 // ======================
@@ -881,4 +883,7 @@ io.on("connection", (socket) => {
 
 // ======================
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, ()=> console.log(`🚀 http://localhost:${PORT}`));
+server.listen(3000, () => {
+    console.log("Server running on http://localhost:3000");
+});
+
