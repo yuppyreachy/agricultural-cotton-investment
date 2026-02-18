@@ -23,47 +23,56 @@ router.get("/login", (req,res)=>{
 router.post("/register", upload.fields([
     { name: "id_card", maxCount: 1 },
     { name: "passport_photo", maxCount: 1 }
-]), (req,res)=>{
+]), async (req, res) => {
 
     const {
-        fullname,
-        dob,
-        email,
-        phone,
-        gender,
-        marital_status,
-        pin,
-        farmer,
-        investor,
-        password,
-        confirm_password,
-        source
+        fullname, dob, email, phone, gender, marital_status,
+        pin, farmer, investor, password, confirm_password, source
     } = req.body;
 
-    // Check required
-    if(!fullname || !dob || !email || !phone || !gender || !marital_status || !pin || !farmer || !investor || !password || !confirm_password || !source){
-        return res.send("❌ All fields are required!");
+    // ===== 1️⃣ Validate input =====
+    if(!fullname || !dob || !email || !phone || !gender || !marital_status ||
+       !pin || !farmer || !investor || !password || !confirm_password || !source){
+        console.log("❌ Registration failed: Missing fields");
+        return res.status(400).send("❌ All fields are required!");
     }
 
     if(password !== confirm_password){
-        return res.send("❌ Passwords do not match!");
+        console.log(`❌ Registration failed for ${email}: Passwords do not match`);
+        return res.status(400).send("❌ Passwords do not match!");
     }
 
     const idCardFile = req.files["id_card"] ? req.files["id_card"][0].filename : null;
     const passportFile = req.files["passport_photo"] ? req.files["passport_photo"][0].filename : null;
 
     if(!idCardFile || !passportFile){
-        return res.send("❌ Please upload your ID card and passport photo.");
+        console.log(`❌ Registration failed for ${email}: Missing files`);
+        return res.status(400).send("❌ Please upload your ID card and passport photo.");
     }
 
-    db.run(
-  `INSERT INTO users (fullname, email, password, balance) VALUES (?,?,?,?)`,
-  [fullname, email, hashed, 100], // 🔥 $100 welcome bonus
-  (err) => {
-      if(err) return res.send("Database error");
-      res.redirect("/success");
-  }
-);
+    try {
+        // ===== 2️⃣ Hash password =====
+        const hashed = await bcrypt.hash(password, 10);
+
+        // ===== 3️⃣ Insert into DB =====
+        db.run(
+            `INSERT INTO users (fullname, email, password, balance) VALUES (?,?,?,?)`,
+            [fullname, email, hashed, 100], // 💰 $100 welcome bonus
+            (err) => {
+                if(err){
+                    console.log(`❌ Database error for ${email}: ${err.message}`);
+                    return res.status(500).send("❌ Database error: " + err.message);
+                }
+
+                // ===== 4️⃣ Log successful registration =====
+                console.log(`✅ New user registered: ${fullname} (${email}) | Files: ${idCardFile}, ${passportFile}`);
+                res.redirect("/success");
+            }
+        );
+    } catch(err){
+        console.log(`❌ Server error for ${email}: ${err.message}`);
+        res.status(500).send("❌ Server error: " + err.message);
+    }
 });
 
 
