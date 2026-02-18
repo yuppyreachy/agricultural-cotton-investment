@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>💰 Elite Deposit Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  body {margin:0; font-family:'Roboto',sans-serif; background:#0b0b0b; color:#fff;}
+  .container{max-width:900px;margin:50px auto;padding:20px;background:#1a1a1a;border-radius:15px;box-shadow:0 0 30px rgba(255,215,0,0.2);}
+  h1,h2,h3{color:#ffd700;margin-bottom:20px;}
+  .deposit-section{display:flex;flex-wrap:wrap;gap:20px;}
+  .deposit-card{background:#222;padding:20px;border-radius:15px;flex:1 1 400px;box-shadow:0 0 20px rgba(255,215,0,0.1);}
+  .deposit-card p{margin:10px 0;}
+  .small-note{font-size:14px;color:#ccc;}
+  select,input[type="number"],input[type="file"]{padding:10px;border-radius:8px;border:none;font-size:16px;width:100%;}
+  button{padding:12px;background:#ffd700;border:none;border-radius:8px;font-weight:bold;cursor:pointer;transition:0.3s;}
+  button:hover{background:#e6c200;}
+  table{width:100%;border-collapse:collapse;margin-top:25px;}
+  th,td{padding:12px;text-align:left;}
+  th{background:#333;color:#ffd700;}
+  tr:nth-child(even){background:#1f1f1f;}
+  .badge{padding:5px 10px;border-radius:12px;font-weight:bold;display:inline-block;}
+  .pending{background:#ffb700;color:#0b0b0b;}
+  .waiting{background:#0099ff;color:#fff;}
+  .approved{background:#28a745;color:#fff;}
+  .rejected{background:#dc3545;color:#fff;}
+  a{color:#ffd700; text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  .directions{background:#111;padding:10px;border-radius:8px;margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>💰 Fund Your Account</h1>
+
+<div class="deposit-section">
+
+<!-- Crypto Deposit -->
+<div class="deposit-card">
+<h2>₿ Crypto Deposit</h2>
+<p>Send crypto to our permanent wallet address:</p>
+<p><strong>BTC Wallet:</strong> bc1qxxxxxxxcompanywallet</p>
+<p><strong>Minimum:</strong> $1,000</p>
+<form onsubmit="return cryptoDeposit()">
+<label>Enter Exact Amount ($)</label>
+<input type="number" id="crypto-amount" min="1000" placeholder="1000" required>
+<label>Upload Proof (Optional)</label>
+<input type="file">
+<button type="submit">I HAVE SENT PAYMENT</button>
+</form>
+<div class="directions">
+  <p>📌 After sending payment, click "I HAVE SENT PAYMENT" above.</p>
+  <p>💌 Customer Service: <a href="mailto:customerservice@company.com">customerservice@company.com</a></p>
+  <p>📱 Account Officer Telegram: <a href="https://t.me/AccountOfficer" target="_blank">@AccountOfficer</a></p>
+</div>
+<p class="small-note">💡 Make sure the amount you enter matches exactly the amount you send to avoid loss of funds.</p>
+</div>
+
+<!-- Manual Deposit -->
+<div class="deposit-card">
+<h2>💳 PayPal / Cash / Bank Deposit</h2>
+<form onsubmit="return manualDeposit()">
+<label>Enter Amount ($)</label>
+<input type="number" id="manual-amount" min="1000" placeholder="1000" required>
+<select id="manual-method" required>
+  <option value="PayPal">PayPal</option>
+  <option value="CashApp">CashApp</option>
+  <option value="Bank">Bank Transfer</option>
+</select>
+<button type="submit">Submit Deposit Request</button>
+</form>
+
+<!-- Admin Info Placeholder -->
+<div id="admin-info" class="directions" style="display:none;">
+  <p>💳 Admin posted the payment info:</p>
+  <p id="info-text"></p>
+  <p>💌 Customer Service: <a href="mailto:customerservice@company.com">customerservice@company.com</a></p>
+  <p>📱 Account Officer Telegram: <a href="https://t.me/AccountOfficer" target="_blank">@AccountOfficer</a></p>
+</div>
+
+<p class="small-note">💡 Admin will provide payment details. Make sure the amount matches exactly what you enter to avoid mix-ups.</p>
+</div>
+
+</div>
+
+<h2>📜 Deposit History (Demo)</h2>
+<table>
+<tr>
+  <th>Method</th>
+  <th>Amount</th>
+  <th>Status</th>
+  <th>Action</th>
+</tr>
+<tr>
+  <td>Crypto</td>
+  <td>$5000</td>
+  <td><span class="badge pending">Pending</span></td>
+  <td>-</td>
+</tr>
+<tr>
+  <td>PayPal</td>
+  <td>$3000</td>
+  <td><span class="badge waiting">Waiting Admin</span></td>
+  <td>
+    Send to: finance@company.com
+    <form style="margin-top:8px;">
+      <input type="file">
+      <button>I HAVE PAID</button>
+    </form>
+  </td>
+</tr>
+<tr>
+  <td>Bank</td>
+  <td>$10000</td>
+  <td><span class="badge approved">Paid</span></td>
+  <td><a href="#">View Proof</a></td>
+</tr>
+</table>
+
+</div>
+
+<script>
+function cryptoDeposit(){
+  const amount = document.getElementById('crypto-amount').value;
+  if(!amount || amount<1000){
+    alert('Please enter at least $1,000.');
+    return false;
+  }
+  alert(`Crypto deposit recorded.\nPlease send exactly $${amount} to the BTC wallet.\nCustomer Service: customerservice@company.com\nAccount Officer Telegram: @AccountOfficer`);
+  return false;
+}
+
+function manualDeposit(){
+  const amount = document.getElementById('manual-amount').value;
+  const method = document.getElementById('manual-method').value;
+  
+  if(!amount || amount<1000){
+    alert('Please enter at least $1,000.');
+    return false;
+  }
+
+  // Simulate admin posting info
+  let adminInfo = '';
+  if(method === 'PayPal') adminInfo = 'PayPal Email: finance@company.com';
+  if(method === 'CashApp') adminInfo = 'CashApp Tag: $CompanyCashApp';
+  if(method === 'Bank') adminInfo = 'Bank Account: 123456789, Bank: XYZ Bank';
+
+  document.getElementById('info-text').innerText = `${adminInfo}\nAmount to deposit: $${amount}`;
+  document.getElementById('admin-info').style.display = 'block';
+
+  alert(`Deposit request submitted for $${amount} via ${method}.\nCheck below for admin info.`);
+
+  return false;
+}
+</script>
+</body>
+</html>
