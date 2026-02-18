@@ -75,6 +75,24 @@ router.post("/register", upload.fields([
     }
 });
 
+let totalRegistered = 0; // put this at the top of your server.js
+
+// Inside your db.run callback after successful insert:
+db.run(
+  "INSERT INTO users (fullname, email, password, balance) VALUES (?,?,?,?)",
+  [fullname, email, hashed, 100],
+  (err) => {
+    if(err) return res.send("Database error");
+
+    totalRegistered++; // increase counter
+    console.log(`✅ New user registered: ${fullname} (${email})`);
+    console.log(`📈 Total registered users: ${totalRegistered}`);
+
+    mailer.sendWelcomeEmail(email, fullname);
+    res.redirect("/success"); // only one response
+  }
+);
+
 
 
 // ===== FORGOT PASSWORD =====
