@@ -188,22 +188,16 @@ input, textarea {
             <button type="submit">Logout</button>
         </form>
     </div>
+<div class="card">
+    <h2>Total Users</h2>
+    <p><%= users ? users.length : 0 %></p>
+</div>
 
-    <!-- DASHBOARD CARDS -->
-    <div class="card-container" id="dashboard-cards">
-        <div class="card">
-            <h2>Total Users</h2>
-            <p><%= users.length %></p>
-        </div>
-        <div class="card">
-            <h2>Total Posts</h2>
-            <p><%= posts.length %></p>
-        </div>
-        <div class="card">
-            <h2>Online Users</h2>
-            <p>—</p> <!-- Optional: implement real online count -->
-        </div>
-    </div>
+<div class="card">
+    <h2>Total Posts</h2>
+    <p><%= posts ? posts.length : 0 %></p>
+</div>
+
 
     <!-- USERS TABLE -->
     <div class="card" id="users-table">
@@ -217,13 +211,11 @@ input, textarea {
                 <th>Update</th>
             </tr>
             <% users.forEach(function(user){ %>
-            <tr>
-                <td><%= user.id %></td>
-                <td><%= user.fullname || user.username %></td>
-                <td><%= user.email %></td>
-                <td>
+            <tr><%= admin.id %>
+<%= admin.username %>
+
                     <form action="/admin/balance" method="POST" style="display:flex;gap:5px;">
-                        <input type="hidden" name="userId" value="<%= user.id %>">
+                        <input type="hidden" name="userId: "<%= admin.id %>",
                         <input type="number" name="balance" value="<%= user.balance %>" step="0.01">
                         <button type="submit" class="btn">Update</button>
                     </form>
@@ -291,7 +283,8 @@ socket.on("receive-message", data=>{
 function sendToAdmin(){
     const msg = document.getElementById("msg").value;
     socket.emit("user-message", {
-        userId: "<%= user.id %>",
+      userId: "<%= admin.id %>",
+
         text: msg
     });
 }
