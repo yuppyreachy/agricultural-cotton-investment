@@ -221,6 +221,16 @@ app.use(session({
 
 app.use(express.static(path.join(__dirname, "public")));
 
+
+
+function adminAuth(req, res, next){
+    if(!req.session.admin){
+        console.log("⚠️ Unauthorized admin access attempt");
+        return res.redirect("/admin"); // your admin login page
+    }
+    next();
+}
+
 // ======================
 // MULTER (UPLOAD)
 // ======================
@@ -350,21 +360,19 @@ app.get("/admin/all-users",(req,res)=>{
 });
 // ================= ADMIN DASHBOARD
 app.get("/admin/dashboard", adminAuth, (req,res)=>{
+    db.get("SELECT * FROM admin WHERE id=?", [req.session.admin], (err, admin) => {
+        if(err || !admin) return res.send("Admin not found");
 
-    db.all("SELECT * FROM users",(err,users)=>{
-
-        db.all("SELECT * FROM posts ORDER BY id DESC",(err2,posts)=>{
-
-            res.render("admin-dashboard",{
-                users: users || [],
-                posts: posts || []
+        db.all("SELECT * FROM users ORDER BY id DESC", (err, users)=>{
+            if(err) users = [];
+            db.all("SELECT * FROM admin_posts ORDER BY id DESC", (err2, posts)=>{
+                if(err2) posts = [];
+                res.render("admin-dashboard", { admin, users, posts });
             });
-
         });
-
     });
-
 });
+
 
 
 // ===== USER DASHBOARD =====
@@ -388,38 +396,27 @@ app.set("view engine", "ejs");
 // ======================
 // REGISTER
 // ======================
-app.post("/auth/register", async (req, res) => {
-    const { email, password } = req.body;
+app.post("/auth/register", async (req,res) => {
+    const { email, password, fullname } = req.body;
+    if(!email || !password || !fullname) return res.send("All fields required");
 
-    if (!email || !password) {
-        return res.send("All fields required");
-    }
-
-    db.get("SELECT * FROM users WHERE email = ?", [email], async (err, row) => {
-        if (err) return res.send("Database error");
-
-        if (row) {
-            return res.send("Email already exists");
-        }
+    db.get("SELECT * FROM users WHERE email=?", [email], async (err,row) => {
+        if(err) return res.send("Database error");
+        if(row) return res.send("Email already exists");
 
         const hashed = await bcrypt.hash(password, 10);
 
-        db.run(
-            "INSERT INTO users (email, password) VALUES (?,?)",
-            [email, hashed],
-            (err) => {
-                if (err) return res.send("Database error");
-// after saving user
-mailer.sendWelcomeEmail(email, fullname)
-                // ✅ ONLY redirect (no res.send)
-                res.redirect("/success");
-                 mailer.sendWelcomeEmail(email, fullname);
-                 res.send("Registration successful! Check your email.");
-            }
-            
-        );
+        db.run("INSERT INTO users (fullname, email, password, balance) VALUES (?,?,?,?)",
+        [fullname, email, hashed, 100], (err) => {
+            if(err) return res.send("Database error");
+            console.log(`✅ New user registered: ${fullname} (${email})`);
+            mailer.sendWelcomeEmail(email, fullname);
+            res.redirect("/success"); // only one response
+        });
     });
 });
+
+
 
 // ===== LOGIN ROUTE =====
 app.post("/auth/login", (req, res) => {
@@ -449,19 +446,21 @@ app.post("/auth/login", (req, res) => {
 
 app.post("/admin-login", async (req, res) => {
     const { username, password } = req.body;
-    if (!username || !password) return res.send("Enter credentials");
+    if(!username || !password) return res.send("Enter credentials");
 
-    db.get("SELECT * FROM admin WHERE username = ?", [username], async (err, admin) => {
-        if (err) return res.send("Database error");
-        if (!admin) return res.send("Admin not found");
+    db.get("SELECT * FROM admin WHERE username=?", [username], async (err, admin) => {
+        if(err) return res.send("Database error");
+        if(!admin) return res.send("Admin not found");
 
         const match = await bcrypt.compare(password, admin.password);
-        if (!match) return res.send("Wrong password");
+        if(!match) return res.send("Wrong password");
 
-        req.session.admin = admin.id;
+        req.session.admin = admin.id; // store admin ID
+        console.log(`🔥 Admin logged in: ${username}`);
         res.redirect("/admin/dashboard");
     });
 });
+
 
 
 
