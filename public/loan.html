@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elite Loan Application</title>
+
+<style>
+body{
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(135deg,#0a0f2c,#020617);
+    color:#fff;
+    margin:0;
+}
+
+.container{
+    max-width:950px;
+    margin:40px auto;
+    background:#0f172a;
+    padding:30px;
+    border-radius:15px;
+    box-shadow:0 0 40px rgba(0,0,0,0.7);
+}
+
+h1{
+    text-align:center;
+    color:#00ffd5;
+    margin-bottom:10px;
+}
+
+.sub{
+    text-align:center;
+    color:#ccc;
+    margin-bottom:30px;
+}
+
+label{
+    font-weight:bold;
+    display:block;
+    margin-top:15px;
+}
+
+input, select, textarea{
+    width:100%;
+    padding:12px;
+    margin-top:5px;
+    border:none;
+    border-radius:8px;
+    background:#020617;
+    color:white;
+}
+
+input[type=file]{
+    background:#020617;
+}
+
+.section{
+    background:#020617;
+    padding:20px;
+    border-radius:12px;
+    margin-top:25px;
+}
+
+button{
+    width:100%;
+    padding:15px;
+    margin-top:25px;
+    background:#00ffd5;
+    color:black;
+    border:none;
+    border-radius:10px;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#00c9a7;
+}
+
+.success{
+    background:#022c22;
+    padding:15px;
+    border-radius:10px;
+    margin-top:20px;
+    display:none;
+    text-align:center;
+    color:#00ffd5;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h1>🏦 Elite Loan Application</h1>
+<div class="sub">Secure Premium Loan Processing • Fast Approval</div>
+
+<form id="loanForm">
+
+<div class="section">
+<h3>👤 Personal Information</h3>
+
+<label>Full Name</label>
+<input type="text" required>
+
+<label>Email Address</label>
+<input type="email" required>
+
+<label>Gender</label>
+<select required>
+<option value="">Select</option>
+<option>Male</option>
+<option>Female</option>
+</select>
+
+<label>Marital Status</label>
+<select required>
+<option value="">Select</option>
+<option>Single</option>
+<option>Married</option>
+<option>Divorced</option>
+</select>
+
+<label>Home Address</label>
+<textarea required></textarea>
+
+<label>Loan Amount ($)</label>
+<input type="number" required>
+
+<label>Purpose of Loan</label>
+<textarea required></textarea>
+
+<label>Loan Duration</label>
+<select required>
+<option value="">Select Duration</option>
+<option>5 Days</option>
+<option>1 Week</option>
+<option>2 Weeks</option>
+<option>1 Month</option>
+</select>
+
+<label>Credit Score</label>
+<input type="text" placeholder="Enter score if available">
+
+</div>
+
+<div class="section">
+<h3>🆔 Identity Verification Uploads</h3>
+
+<label>ID Card Front</label>
+<input type="file">
+
+<label>ID Card Back</label>
+<input type="file">
+
+<label>SSN / TIN / Identity Number Proof</label>
+<input type="file">
+
+<label>Passport Photograph</label>
+<input type="file">
+
+<label>Signature on Paper Upload</label>
+<input type="file">
+
+</div>
+
+<div class="section">
+  <h3>💰 Loan Receiving Method</h3>
+
+  <select id="loanMethod" onchange="showLoanFields()" required>
+    <option value="">Select Method</option>
+    <option>Cash App</option>
+    <option>PayPal</option>
+    <option>Crypto (BTC/USDT/ETH)</option>
+    <option>Cheque</option>
+    <option>Cash Mailing</option>
+  </select>
+
+  <div id="loanExtraFields"></div>
+
+  <label>Loan Amount ($)</label>
+  <input type="number" id="loanAmount" placeholder="Enter loan amount" required>
+
+  <button type="button" onclick="submitLoan()">Submit Loan Application</button>
+
+  <div class="success" id="successBox" style="display:none; margin-top:20px; padding:15px; background:#1c1c1c; border-radius:10px; color:gold;">
+    ✅ Loan request submitted successfully.<br><br>
+    Our finance team will review and contact you shortly.<br>
+    Approval notification will be sent to your email.<br><br>
+    Customer Service: support@gmail.com<br>
+    Account Officer Telegram: @YourAdmin
+  </div>
+</div>
+
+<script>
+function showLoanFields() {
+  const method = document.getElementById("loanMethod").value;
+  const container = document.getElementById("loanExtraFields");
+  container.innerHTML = "";
+
+  if(method === "Cash Mailing") {
+    container.innerHTML = `
+      <label>Full Name</label>
+      <input type="text" id="fullName" placeholder="Full Name" required>
+      <label>Home Address</label>
+      <input type="text" id="homeAddress" placeholder="Home Address" required>
+      <label>Email</label>
+      <input type="email" id="email" placeholder="Your Email" required>
+      <label>Phone Number</label>
+      <input type="text" id="phone" placeholder="Phone Number" required>
+    `;
+  }
+  else if(method === "Cheque") {
+    container.innerHTML = `
+      <label>Full Name</label>
+      <input type="text" id="fullName" placeholder="Full Name" required>
+      <label>Home Address</label>
+      <input type="text" id="homeAddress" placeholder="Home Address" required>
+      <label>Bank Name</label>
+      <input type="text" id="bankName" placeholder="Bank Name" required>
+      <label>Account Number</label>
+      <input type="text" id="accountNumber" placeholder="Account Number" required>
+    `;
+  }
+  else {
+    container.innerHTML = `
+      <label>Payment Details</label>
+      <textarea id="loanDetails" placeholder="Enter details" required></textarea>
+    `;
+  }
+}
+
+function submitLoan() {
+  const method = document.getElementById("loanMethod").value;
+  const amount = parseFloat(document.getElementById("loanAmount").value);
+
+  // Check common fields
+  if(!method || !amount){
+    alert("Enter all required fields");
+    return;
+  }
+
+  // Check dynamic fields
+  let details = {};
+  if(method === "Cash Mailing") {
+    const fullName = document.getElementById("fullName").value;
+    const homeAddress = document.getElementById("homeAddress").value;
+    const email = document.getElementById("email").value;
+    const phone = document.getElementById("phone").value;
+    if(!fullName || !homeAddress || !email || !phone){
+      alert("Enter all required fields");
+      return;
+    }
+    details = {fullName, homeAddress, email, phone};
+  }
+  else if(method === "Cheque") {
+    const fullName = document.getElementById("fullName").value;
+    const homeAddress = document.getElementById("homeAddress").value;
+    const bankName = document.getElementById("bankName").value;
+    const accountNumber = document.getElementById("accountNumber").value;
+    if(!fullName || !homeAddress || !bankName || !accountNumber){
+      alert("Enter all required fields");
+      return;
+    }
+    details = {fullName, homeAddress, bankName, accountNumber};
+  }
+  else {
+    const loanDetails = document.getElementById("loanDetails").value;
+    if(!loanDetails){
+      alert("Enter all required fields");
+      return;
+    }
+    details = {loanDetails};
+  }
+
+  // Save for demo
+  if(!window.loanRequests) window.loanRequests = [];
+  window.loanRequests.push({method, amount, details, date: new Date().toLocaleString()});
+
+  // Show success
+  document.getElementById("successBox").style.display = "block";
+
+  // Redirect after 2 sec
+  setTimeout(()=>{
+    window.location.href="/loan-confirmation.html";
+  },2000);
+}
+</script>
+
+
+</form>
+</div>
+
+<script>
+document.getElementById("loanForm").addEventListener("submit", function(e){
+    e.preventDefault();
+
+    document.getElementById("successBox").style.display="block";
+
+    setTimeout(()=>{
+        window.location.href="/views/dashboard.ejs";
+    },4000);
+});
+</script>
+
+</body>
+</html>
