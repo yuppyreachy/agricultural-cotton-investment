@@ -12,11 +12,12 @@ button:hover{box-shadow:0 0 15px gold}
 </head>
 <body>
 
-<form class="box" method="POST" action="/admin-login">
-<h2>ADMIN LOGIN</h2>
-<input name="username" placeholder="Username" required>
-<input name="password" type="password" placeholder="Password" required>
-<button>Login</button>
+<form action="/admin-login" method="POST">
+    <input type="text" name="username">
+    <input type="password" name="password">
+    <button type="submit">Login</button>
+</form>
+
 
 </form>  
 
