@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<style>
+body { font-family: 'Poppins', sans-serif; margin:0; background:#0a0a0a; color:#fff; }
+h2,h3 { color:gold; }
+
+.sidebar { position: fixed; width:240px; height:100vh; background:#111; padding:20px; }
+.sidebar a { display:block; padding:10px; color:#ccc; text-decoration:none; margin-bottom:8px; }
+.sidebar a:hover { background:gold; color:#000; }
+
+.main { margin-left:260px; padding:20px; }
+
+.card { background:#1b1b1b; padding:15px; border-radius:10px; margin-bottom:20px; }
+
+.user-row { display:flex; justify-content:space-between; align-items:center; padding:8px; margin-bottom:6px; background:rgba(255,215,0,0.05); border-radius:6px; cursor:pointer; }
+.user-row.active { background:rgba(255,215,0,0.2); }
+
+button { padding:5px 10px; border:none; border-radius:5px; cursor:pointer; }
+button.approve { background:green; color:#fff; }
+button.decline { background:red; color:#fff; }
+
+.chat-box { height:300px; overflow-y:auto; background:#111; padding:10px; border-radius:10px; }
+.chat-message { margin-bottom:8px; }
+#chatInput { width:100%; padding:8px; margin-top:8px; border:none; border-radius:5px; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>ADMIN PANEL</h2>
+    <a href="/admin/dashboard">Dashboard</a>
+    <a href="/admin/logout">Logout</a>
+</div>
+
+<div class="main">
+
+    <!-- ================= STATS ================= -->
+    <h3>📊 Overview</h3>
+    <div class="card" id="statsCard">Loading...</div>
+
+    <!-- ================= USERS ================= -->
+    <h3>👥 Users</h3>
+    <div class="card" id="usersCard">
+        <% users.forEach(user => { %>
+            <div class="user-row" data-id="<%= user.id %>">
+                <span>
+                    <%= user.fullname %> 
+                    ($<span class="balance"><%= user.balance %></span>)
+                </span>
+                <div>
+                    <input type="number" placeholder="Amount" class="balanceInput" style="width:70px;">
+                    <button class="updateBalanceBtn">Update</button>
+                    <button class="openChatBtn">Chat</button>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+
+    <!-- ================= DEPOSITS ================= -->
+    <h3>💰 Pending Deposits</h3>
+    <div class="card" id="depositCard">
+        <% deposits.filter(d => d.status === 'pending').forEach(dep => { %>
+            <div class="user-row" data-id="<%= dep.id %>">
+                <span>$<%= dep.amount %> (User ID: <%= dep.user_id %>)</span>
+                <div>
+                    <button class="approve approveBtn">Approve</button>
+                    <button class="decline declineBtn">Decline</button>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+
+    <!-- ================= CHAT ================= -->
+    <h3>💬 Chat</h3>
+    <div class="card">
+        <div class="chat-box" id="chatBox"></div>
+        <input type="text" id="chatInput" placeholder="Type message and press Enter...">
+    </div>
+
+</div>
+
+<script>
+let activeUserId = null;
+const chatBox = document.getElementById("chatBox");
+const chatInput = document.getElementById("chatInput");
+
+// ================= LOAD STATS =================
+async function loadStats() {
+    try {
+        const res = await axios.get("/admin/stats");
+        const s = res.data;
+        document.getElementById("statsCard").innerHTML = `
+            <p>Total Users: ${s.totalUsers}</p>
+            <p>Total Deposits: $${s.totalDeposits}</p>
+            <p>Total Withdrawals: $${s.totalWithdrawals}</p>
+            <p>Revenue: $${s.revenue}</p>
+        `;
+    } catch(err) { console.error("Stats error", err); }
+}
+loadStats();
+setInterval(loadStats, 15000); // auto-refresh
+
+// ================= SELECT USER FOR CHAT =================
+document.querySelectorAll(".openChatBtn").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+        const row = e.target.closest(".user-row");
+        activeUserId = row.dataset.id;
+        document.querySelectorAll(".user-row").forEach(r => r.classList.remove("active"));
+        row.classList.add("active");
+        await loadChat(activeUserId);
+    });
+});
+
+// ================= LOAD CHAT =================
+async function loadChat(userId) {
+    chatBox.innerHTML = "Loading...";
+    try {
+        const res = await axios.get(`/admin/chat/${userId}`);
+        chatBox.innerHTML = "";
+        res.data.forEach(msg => appendMessage(msg.sender, msg.message));
+        chatBox.scrollTop = chatBox.scrollHeight;
+    } catch(err) { chatBox.innerHTML = "Failed to load chat"; }
+}
+
+// ================= SEND MESSAGE =================
+chatInput.addEventListener("keypress", async (e) => {
+    if(e.key === "Enter" && activeUserId && chatInput.value.trim() !== "") {
+        const text = chatInput.value.trim();
+        try {
+            await axios.post(`/admin/chat/${activeUserId}`, { message: text });
+            appendMessage("admin", text);
+            chatInput.value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+        } catch(err) { alert("Message failed"); }
+    }
+});
+
+// ================= APPEND MESSAGE =================
+function appendMessage(sender, message) {
+    const div = document.createElement("div");
+    div.className = "chat-message";
+    div.innerHTML = `<strong>${sender.toUpperCase()}:</strong> ${message}`;
+    chatBox.appendChild(div);
+}
+
+// ================= BALANCE UPDATE =================
+document.querySelectorAll(".updateBalanceBtn").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+        const row = e.target.closest(".user-row");
+        const userId = row.dataset.id;
+        const input = row.querySelector(".balanceInput");
+        const balanceDisplay = row.querySelector(".balance");
+        const amount = Number(input.value);
+        if(isNaN(amount) || amount === 0) return alert("Enter valid amount");
+
+        try {
+            const res = await axios.post(`/admin/balance/${userId}`, { amount });
+            balanceDisplay.textContent = res.data.newBalance;
+            input.value = "";
+            loadStats();
+        } catch(err) { alert("Balance update failed"); }
+    });
+});
+
+// ================= PROCESS DEPOSIT =================
+document.querySelectorAll(".approveBtn, .declineBtn").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+        const row = e.target.closest(".user-row");
+        const depositId = row.dataset.id;
+        const action = btn.classList.contains("approve") ? "approve" : "decline";
+        try {
+            await axios.post(`/admin/deposit/${depositId}/${action}`);
+            row.remove();
+            loadStats();
+        } catch(err) { alert("Failed to process"); }
+    });
+});
+</script>
+
+</body>
+</html>
