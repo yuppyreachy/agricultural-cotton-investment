@@ -1,14 +1,12 @@
-// db.js
-const { Pool } = require("pg");
-require("dotenv").config();
+// database.js
+const { Pool } = require("pg");  // Import PostgreSQL client
 
+// Create a connection pool
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL, // Your database URL
   ssl: {
-    rejectUnauthorized: false // only if needed for cloud DBs
+    rejectUnauthorized: false // Needed for some cloud hosts
   }
 });
 
-pool.on("connect", () => console.log("✅ PostgreSQL connected"));
-
-module.exports = pool;
+module.exports = pool; // Export it so you can use it elsewhere
