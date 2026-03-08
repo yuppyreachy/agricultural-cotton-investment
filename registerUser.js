@@ -1,4 +1,4 @@
-const sqlite3 = require("sqlite3").verbose();
+
 const bcrypt = require("bcrypt");
 const path = require("path");
 const sendMail = require("./utils/sendMail");
