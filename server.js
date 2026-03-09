@@ -21,7 +21,7 @@ const bcrypt = require("bcrypt");
 const multer = require("multer");
 const session = require("express-session");
 const axios = require("axios");
-const sgMail = require("@sendgrid/mail");
+
 
 // ======================
 // DATABASE SETUP
@@ -29,19 +29,25 @@ const sgMail = require("@sendgrid/mail");
 const db = require("./dbPostgres"); // should export pool/query functions
 
 // ======================
-// EMAIL SETUP
+// EMAIL SETUP (RESEND)
 // ======================
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const { Resend } = require("resend");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function sendEmail(to, subject, message) {
-  const msg = {
-    to,
-    from: "Agriculturalfoundationiv@gmail.com",
-    subject,
-    text: message,
-    html: `<p>${message}</p>`,
-  };
-  await sgMail.send(msg);
+  try {
+    await resend.emails.send({
+      from: "Agriculturalfoundationiv@gmail.com",
+      to: to,
+      subject: subject,
+      html: `<p>${message}</p>`
+    });
+
+    console.log("Email sent successfully");
+  } catch (error) {
+    console.error("Email send error:", error);
+  }
 }
 
 const transporter = nodemailer.createTransport({
@@ -91,7 +97,7 @@ if (!fs.existsSync("uploads")) {
 app.use("/", contactRoute);
 app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
-
+app.set("trust proxy", 1);
 app.use("/uploads", express.static("uploads"));
 app.use(express.static("public"));
 // ======================
@@ -116,6 +122,7 @@ function adminAuth(req, res, next) {
   }
   next();
 }
+
 
 // ======================
 // MULTER SETUP
@@ -230,25 +237,6 @@ async function dbRun(query, params = []) {
     await pool.query(query, params);
 }
 
-async function updateInvestmentsProfit() {
-    try {
-        const investments = await dbAll("SELECT * FROM investments WHERE status='active'");
-        if (!investments.length) return;
-
-        const control = await dbGet("SELECT roi_percent FROM investment_control ORDER BY id DESC LIMIT 1");
-        const roiPercent = control?.roi_percent || 5;
-
-        for (const inv of investments) {
-            const profitGain = (inv.amount * roiPercent) / 100;
-            await dbRun("UPDATE investments SET profit=profit+$1, withdrawable=withdrawable+$1 WHERE id=$2", [profitGain, inv.id]);
-            await dbRun("UPDATE users SET balance=balance+$1 WHERE id=$2", [profitGain, inv.user_id]);
-        }
-
-        console.log(`✅ Profits updated for ${investments.length} investments`);
-    } catch (err) {
-        console.error("Profit Engine Error:", err);
-    }
-}
 
 // -------------------
 // PUBLIC PAGE ROUTES
@@ -264,7 +252,6 @@ app.get("/withdraw", (req, res) => sendPage(res, "withdraw.html"));
 app.get("/kyc", (req, res) => sendPage(res, "kyc.html"));
 app.get("/loan", (req, res) => sendPage(res, "loan.html"));
 app.get("/settings", (req, res) => sendPage(res, "settings.html"));
-app.get("/deposit", (req, res) => sendPage(res, "deposit.html"));
 app.get("/investment", (req, res) => sendPage(res, "investment.html"));
 app.get("/about", (req, res) => sendPage(res, "about.html"));
 app.get("/privacy", (req, res) => sendPage(res, "privacy.html"));
@@ -406,8 +393,8 @@ app.get("/gallery", async (req, res) => {
   }
 });
 
-app.get("/*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+app.use((req, res) => {
+  res.status(404).send("Page not found");
 });
 
 // -------------------
