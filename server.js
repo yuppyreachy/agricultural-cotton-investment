@@ -22,7 +22,6 @@ const multer = require("multer");
 const session = require("express-session");
 const axios = require("axios");
 const sgMail = require("@sendgrid/mail");
-const fs = require("fs");
 
 // ======================
 // DATABASE SETUP
