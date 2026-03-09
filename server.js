@@ -82,12 +82,19 @@ function checkAdmin(req, res, next) {
   }
   next();
 }
+const fs = require("fs");
+
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
 
 
 app.use("/", contactRoute);
 app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
 
+app.use("/uploads", express.static("uploads"));
+app.use(express.static("public"));
 // ======================
 // SESSION + MIDDLEWARE
 // ======================
@@ -250,8 +257,8 @@ async function updateInvestmentsProfit() {
 app.get("/deposit", (req, res) => {
     res.sendFile(path.join(__dirname, "public/deposit.html"));
 });
-app.get("/", (req, res) => {
-  res.redirect("/login.html");
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 app.get("/register", (req, res) => sendPage(res, "register.html"));
 app.get("/withdraw", (req, res) => sendPage(res, "withdraw.html"));
@@ -398,6 +405,10 @@ app.get("/gallery", async (req, res) => {
   } catch {
     res.json([]);
   }
+});
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
 // -------------------
