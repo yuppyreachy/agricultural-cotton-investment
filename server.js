@@ -31,7 +31,6 @@ const db = require("./dbPostgres"); // should export pool/query functions
 // ======================
 // EMAIL SETUP (RESEND)
 // ======================
-const { Resend } = require("resend");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
